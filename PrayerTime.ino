@@ -1,4 +1,10 @@
-
+//LIBRARIES FOR OVER THE AIR UPDATES
+#include <Arduino.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ElegantOTA.h>
+//ESSENTIAL LIBRARIES FOR OVERALL LIBRARIES
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -56,6 +62,8 @@ uint16_t myORANGE = dma_display->color565(255, 154, 0);
 * There could be an instance where the digital clock 
 */
 bool get_prayer_times = false;
+
+AsyncWebServer server(80);
 
 void setup() {
   
@@ -120,9 +128,6 @@ void setup() {
   dma_display->setCursor(3,61);
   dma_display->print("ISHA");
 
-  //dma_display->setCursor(3,34);
-  //dma_display->setCursor(3,44);
-
   //WIFI SETUP
   WiFi.begin(ssid, password);
   Serial.print("Connecting");
@@ -133,6 +138,16 @@ void setup() {
   Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
+
+  //ESP32 OVER THE AIR UPDATE FUNCTIONALITY, REFER TO ELEGANT OTA DOCUMENTATION
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Hi! I am ESP32.");
+  });
+
+  server.begin();
+  Serial.println("HTTP server started");
+
+  ElegantOTA.begin(&server);    // Start ElegantOTA
 }
 
 void Task1code(void * pvParameters) {
@@ -181,6 +196,7 @@ void Task1code(void * pvParameters) {
         dma_display->setTextSize(2);
         dma_display->fillRect(1,1,62,12,myBLACK);
         dma_display->print(hour_str + ":" + min_str + ":" + sec_str);
+        Serial.println(hour_str + ":" + min_str + ":" + sec_str);
         dma_display->setTextSize(1);
         dma_display->setCursor(55,7);
         dma_display->print(am_pm);         
@@ -194,7 +210,8 @@ void Task1code(void * pvParameters) {
   }
 }
 void loop() {
-  // put your main code here, to run repeatedly:
+    ElegantOTA.loop(); //OVER THE AIR UPDATE FUNCTIONALITY 
+
     const char* fajr = nullptr;
     const char* sunrise = nullptr;
     const char* dhuhr = nullptr;
