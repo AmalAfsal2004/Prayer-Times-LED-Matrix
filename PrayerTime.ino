@@ -4,6 +4,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
+#include <WebSerial.h>
 //ESSENTIAL LIBRARIES FOR OVERALL LIBRARIES
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -16,12 +17,14 @@
 const char* ssid = SSID; //WIFI USERNAME, ex: ssid = "House"
 const char* password = PASSWORD; //WIFI PASSWORD , ex: password = "House123"
 
+const char* country = COUNTRY; 
+const char* zipcode = ZIPCODE;
+String api_link = "https://www.islamicfinder.us/index.php/api/prayer_times?country=" + String(country) + "&zipcode=" + String(zipcode);
+
 //The Clock being displayed synchronizes using this NTP SERVER
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = -28800; //GMT OFFSET
 const int daylightOffset_sec = 3600; //Daylight Savings offset
-
-TaskHandle_t Task1; //Utilizing ESP32 Dual Core processing
 
 //----------------------------------------Defines the connected PIN between P3 and ESP32.
 #define R1_PIN 4
@@ -62,6 +65,8 @@ uint16_t myORANGE = dma_display->color565(255, 154, 0);
 * There could be an instance where the digital clock 
 */
 bool get_prayer_times = false;
+unsigned long prev_clock_millis = 0;
+unsigned long prev_display_millis = 0;
 
 AsyncWebServer server(80);
 
@@ -69,16 +74,6 @@ void setup() {
   
   Serial.begin(115200); 
   delay(3000);
-
-  xTaskCreatePinnedToCore(
-      Task1code,
-      "Task1",
-      2048,
-      NULL,
-      1,
-      &Task1,
-      0);
-  delay(1000);
 
   // Initialize the connected PIN between Panel P3 and ESP32.
   HUB75_I2S_CFG::i2s_pins _pins={R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN};
@@ -107,26 +102,7 @@ void setup() {
   dma_display->clearScreen();
   delay(1000);
 
-  dma_display->setFont(&TomThumb);
-  dma_display->setTextWrap(false);
-  dma_display->setTextSize(1);
-  dma_display->drawRect(0,0,dma_display->width(), dma_display->height(), myORANGE);
-  dma_display->drawLine(0,13,64,13,myORANGE);
-  dma_display->setCursor(3,21);
-  dma_display->setTextColor(myWHITE);
-  dma_display->print("FAJR");
-  dma_display->drawLine(0,23,64,23,myORANGE);
-  dma_display->setCursor(3,31);
-  dma_display->print("DUHR");
-  dma_display->drawLine(0,33,64,33,myORANGE);
-  dma_display->setCursor(3,41);
-  dma_display->print("ASR");
-  dma_display->drawLine(0,43,64,43,myORANGE);
-  dma_display->setCursor(3,51);
-  dma_display->print("MAGH.");
-  dma_display->drawLine(0,53,64,53,myORANGE);
-  dma_display->setCursor(3,61);
-  dma_display->print("ISHA");
+  static_background(); //Creates the static background
 
   //WIFI SETUP
   WiFi.begin(ssid, password);
@@ -139,6 +115,39 @@ void setup() {
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
 
+  if ((WiFi.status() == WL_CONNECTED)) {
+    HTTPClient client;
+    client.useHTTP10(true);
+    client.begin(api_link);
+    int httpCode = client.GET();
+
+    if (httpCode > 0) {
+      get_n_display_times(client, get_prayer_times, httpCode);
+    }
+    else {
+      Serial.println("Error on initial fetch prayer times HTTP Request");
+    }
+  }
+  else {
+    Serial.println("Connection Lost on initial fetch prayer times request");
+  }
+
+/*
+  WebSerial.begin(&server); //ONLINE SERIAL MONITOR
+  WebSerial.onMessage([&](uint8_t *data, size_t len) {
+    Serial.printf("Received %u bytes from WebSerial: ", len);
+    Serial.write(data, len);
+    Serial.println();
+    WebSerial.println("Received Data...");
+    String d = "";
+    for(size_t i=0; i < len; i++){
+      d += char(data[i]);
+    }
+    WebSerial.println(d);
+  });
+  */
+  ElegantOTA.begin(&server);   
+  ElegantOTA.setAutoReboot(true);
   //ESP32 OVER THE AIR UPDATE FUNCTIONALITY, REFER TO ELEGANT OTA DOCUMENTATION
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
@@ -147,152 +156,39 @@ void setup() {
   server.begin();
   Serial.println("HTTP server started");
 
-  ElegantOTA.begin(&server);    // Start ElegantOTA
 }
 
-void Task1code(void * pvParameters) {
-  delay(15000);
-  Serial.println("Task1 running on core ");
-  Serial.println(xPortGetCoreID());
 
-  for(;;) {
-    configTime(gmtOffset_sec,daylightOffset_sec,ntpServer);
-    struct tm timeinfo;
-    if(!getLocalTime(&timeinfo)) {
-      Serial.println("Failed to obtain time");
-    }
-    else {
-      int hour = timeinfo.tm_hour;
-      int min = timeinfo.tm_min;
-      int sec = timeinfo.tm_sec;
-      String am_pm = "AM";
-      if (hour == 0) {
-        am_pm = "AM";
-        hour = 12;
-      }
-      else if (hour == 12) {
-        am_pm = "PM";
-      }
-      else if (hour > 12 ) {
-        hour -= 12;
-        am_pm = "PM";
-      }
-
-      if (!get_prayer_times) {
-        String hour_str = String(hour);
-        String min_str = String(min);
-        String sec_str = String(sec);
-        if (hour < 10) {
-          hour_str = "0" + String(hour);
-        }
-        if (min < 10) {
-          min_str = "0" + String(min);
-        }
-        if (sec < 10) {
-          sec_str = "0" + String(sec);
-        }
-        dma_display->setFont(&TomThumb);
-        dma_display->setCursor(2,12);
-        dma_display->setTextSize(2);
-        dma_display->fillRect(1,1,62,12,myBLACK);
-        dma_display->print(hour_str + ":" + min_str + ":" + sec_str);
-        Serial.println(hour_str + ":" + min_str + ":" + sec_str);
-        dma_display->setTextSize(1);
-        dma_display->setCursor(55,7);
-        dma_display->print(am_pm);         
-      }
-      UBaseType_t stackLeft = uxTaskGetStackHighWaterMark(NULL);
-      Serial.print("\n");
-      Serial.print("Stack space left: ");
-      Serial.println(stackLeft);
-      vTaskDelay(1000);
-    }
-  }
-}
 void loop() {
-    ElegantOTA.loop(); //OVER THE AIR UPDATE FUNCTIONALITY 
+  ElegantOTA.loop(); //OVER THE AIR UPDATE FUNCTIONALITY 
 
-    const char* fajr = nullptr;
-    const char* sunrise = nullptr;
-    const char* dhuhr = nullptr;
-    const char* asr = nullptr;
-    const char* maghrib = nullptr;
-    const char* isha = nullptr;
+  const int interval_clock = 1000;
+  const int interval_display = 7200000;
 
-    //Refer to local_info.h
-    const char* country = COUNTRY; 
-    const char* zipcode = ZIPCODE;
-    String api_link = "https://www.islamicfinder.us/index.php/api/prayer_times?country=" + String(country) + "&zipcode=" + String(zipcode);
+  if ((millis() - prev_clock_millis) >= interval_clock) {
+    prev_clock_millis = millis();
+    get_n_display_clk();
+  }
 
+  if ((millis() - prev_display_millis) >= interval_display) {
+    prev_display_millis = millis();
 
-  if ((WiFi.status() == WL_CONNECTED)) {
-    HTTPClient client;
-    client.useHTTP10(true);
-    client.begin(api_link);
-    int httpCode = client.GET();
+    if ((WiFi.status() == WL_CONNECTED)) {
+      HTTPClient client;
+      client.useHTTP10(true);
+      client.begin(api_link);
+      int httpCode = client.GET();
 
-    if (httpCode > 0) {
-      get_prayer_times = true; 
-      String payload = client.getString();
-      payload.replace("%am%", "AM");
-      payload.replace("%pm%", "PM");
-      Serial.println("\nStatuscode: " + String(httpCode));
-      Serial.println(payload);
-
-      DynamicJsonDocument doc(1024);
-      deserializeJson(doc,payload);
-
-      fajr = doc["results"]["Fajr"];
-      sunrise = doc["results"]["Duha"];
-      dhuhr = doc["results"]["Dhuhr"];
-      asr = doc["results"]["Asr"];
-      maghrib = doc["results"]["Maghrib"];
-      isha = doc["results"]["Isha"];
-
-      Serial.println(fajr);
-      Serial.println(sunrise);
-      Serial.println(dhuhr);
-      Serial.println(asr);
-      Serial.println(maghrib);
-      Serial.println(isha);
-
-      client.end();
-
-      dma_display->fillRect(38,17,23,5,myBLACK);
-      dma_display->fillRect(38,27,23,5,myBLACK);
-      dma_display->fillRect(38,37,23,5,myBLACK);
-      dma_display->fillRect(38,47,23,5,myBLACK);
-      dma_display->fillRect(38,57,23,5,myBLACK);
-
-      dma_display->setTextWrap(false);
-      dma_display->setCursor(38,21);
-      dma_display->setTextColor(myWHITE);
-      dma_display->print(fajr);
-
-      dma_display->setCursor(38,31);
-      dma_display->setTextColor(myWHITE);
-      dma_display->print(dhuhr);
-
-      dma_display->setCursor(38,41);
-      dma_display->setTextColor(myWHITE);
-      dma_display->print(asr);
-
-      dma_display->setCursor(38,51);
-      dma_display->setTextColor(myWHITE);
-      dma_display->print(maghrib);
-
-      dma_display->setCursor(38,61);
-      dma_display->setTextColor(myWHITE);
-      dma_display->print(isha);
-
-      get_prayer_times = false; 
+      if (httpCode > 0) {
+        get_n_display_times(client, get_prayer_times, httpCode);
+      }
+      else {
+        Serial.println("Error on HTTP Request");
+      }
     }
     else {
-      Serial.println("Error on HTTP Request");
+      Serial.println("Connection Lost");
     }
+
   }
-  else {
-    Serial.println("Connection Lost");
-  }
-  delay(7200000); //Prayer times will update every two hours
 }
