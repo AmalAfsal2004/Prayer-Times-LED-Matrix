@@ -1,6 +1,5 @@
 //LIBRARIES FOR OVER THE AIR UPDATES
 #include <Arduino.h>
-#include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
@@ -14,6 +13,13 @@
 #include <local_info.h> //Local file that holds Internet information, plus Location and Country for API query
 #include <Fonts/TomThumb.h>
 
+/*
+* Majority if not all the Serial.print() and Serial.println() has been replaced by
+* Serial_n_Web() and Serial_n_Webln(), refer to functions.ino
+* These two functions give readings to the Serial Monitor and Web Serial Monitor
+*/
+
+
 const char* ssid = SSID; //WIFI USERNAME, ex: ssid = "House"
 const char* password = PASSWORD; //WIFI PASSWORD , ex: password = "House123"
 
@@ -26,6 +32,8 @@ const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = -28800; //GMT OFFSET
 const int daylightOffset_sec = 3600; //Daylight Savings offset
 
+
+//64x64 RGB MATRIX configuration 
 //----------------------------------------Defines the connected PIN between P3 and ESP32.
 #define R1_PIN 4
 #define G1_PIN 2
@@ -45,7 +53,7 @@ const int daylightOffset_sec = 3600; //Daylight Savings offset
 #define CLK_PIN 21
 //----------------------------------------
 
-//----------------------------------------Defines the P5 Panel configuration.
+//----------------------------------------Defines the P3 Panel configuration.
 #define PANEL_RES_X 64  //--> Number of pixels wide of each INDIVIDUAL panel module. 
 #define PANEL_RES_Y 64  //--> Number of pixels tall of each INDIVIDUAL panel module.
 #define PANEL_CHAIN 1   //--> Total number of panels chained one to another
@@ -62,16 +70,22 @@ uint16_t myORANGE = dma_display->color565(255, 154, 0);
 //----------------------------------------
 
 /*
-* There could be an instance where the digital clock 
+* There could be an instance for when the Prayer Times and Clock update at the same time
+* To avoid the cursor moving when not supposed to, if this boolean is set to true, 
+* the clock will hold updating until the Prayer times are updated and displayed
 */
 bool get_prayer_times = false;
+
+/*
+* two longs used for millis() delaying
+*/
 unsigned long prev_clock_millis = 0;
 unsigned long prev_display_millis = 0;
 
-AsyncWebServer server(80);
+//For OTA serial monitor and sketch pushing
+AsyncWebServer server(80); 
 
 void setup() {
-  
   Serial.begin(115200); 
   delay(3000);
 
@@ -106,15 +120,18 @@ void setup() {
 
   //WIFI SETUP
   WiFi.begin(ssid, password);
-  Serial.print("Connecting");
+  Serial_n_Web("Connecting");
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    Serial_n_Web(".");
   }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
+  Serial_n_Webln("");
+  Serial_n_Web("Connected to WiFi network with IP Address: ");
+  Serial_n_Webln(WiFi.localIP());
 
+
+  //Because displaying the prayer times is on a millis() delay
+  // We want to get the display times at least once during setup
   if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient client;
     client.useHTTP10(true);
@@ -125,14 +142,15 @@ void setup() {
       get_n_display_times(client, get_prayer_times, httpCode);
     }
     else {
-      Serial.println("Error on initial fetch prayer times HTTP Request");
+      Serial_n_Webln("Error on initial fetch prayer times HTTP Request");
     }
   }
   else {
-    Serial.println("Connection Lost on initial fetch prayer times request");
+    Serial_n_Webln("Connection Lost on initial fetch prayer times request");
   }
 
-/*
+//===========================================================================
+ //Anthing below this line, until the end of the setup loop, is for OTA Functionality
   WebSerial.begin(&server); //ONLINE SERIAL MONITOR
   WebSerial.onMessage([&](uint8_t *data, size_t len) {
     Serial.printf("Received %u bytes from WebSerial: ", len);
@@ -145,16 +163,15 @@ void setup() {
     }
     WebSerial.println(d);
   });
-  */
+
   ElegantOTA.begin(&server);   
   ElegantOTA.setAutoReboot(true);
-  //ESP32 OVER THE AIR UPDATE FUNCTIONALITY, REFER TO ELEGANT OTA DOCUMENTATION
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
   });
 
   server.begin();
-  Serial.println("HTTP server started");
+  Serial_n_Webln("HTTP server started");
 
 }
 
@@ -162,14 +179,18 @@ void setup() {
 void loop() {
   ElegantOTA.loop(); //OVER THE AIR UPDATE FUNCTIONALITY 
 
+  //Refresh the clock every second
   const int interval_clock = 1000;
+  //Refresh the Prayer Times every 2 hours
   const int interval_display = 7200000;
 
+  //Display Clock
   if ((millis() - prev_clock_millis) >= interval_clock) {
     prev_clock_millis = millis();
     get_n_display_clk();
   }
 
+  //Display Prayer Times
   if ((millis() - prev_display_millis) >= interval_display) {
     prev_display_millis = millis();
 
@@ -183,12 +204,11 @@ void loop() {
         get_n_display_times(client, get_prayer_times, httpCode);
       }
       else {
-        Serial.println("Error on HTTP Request");
+        Serial_n_Webln("Error on HTTP Request");
       }
     }
     else {
-      Serial.println("Connection Lost");
+      Serial_n_Webln("Connection Lost");
     }
-
   }
 }

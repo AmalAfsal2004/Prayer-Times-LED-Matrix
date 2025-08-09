@@ -6,6 +6,26 @@
 #include <local_info.h> //Local file that holds Internet information, plus Location and Country for API query
 #include <Fonts/TomThumb.h>
 
+
+/*
+* println() for both online and real life Serial Monitor
+*/
+void Serial_n_Webln(auto text) {
+  Serial.println(text);
+  WebSerial.println(text);
+}
+
+/*
+* print() for both online and real life Serial Monitor
+*/
+void Serial_n_Web(auto text) {
+  Serial.print(text);
+  WebSerial.print(text);
+}
+
+/*
+* Displays the general Style of the Prayer schedule
+*/
 void static_background() {
   dma_display->setFont(&TomThumb);
   dma_display->setTextWrap(false);
@@ -29,11 +49,15 @@ void static_background() {
   dma_display->print("ISHA");
 }
 
+/*
+* Gets time from NTP server
+* Displays Clock on the rgb matrix
+*/
 void get_n_display_clk() {
   configTime(gmtOffset_sec,daylightOffset_sec,ntpServer);
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
+    Serial_n_Webln("Failed to obtain time");
   }
   else {
     int hour = timeinfo.tm_hour;
@@ -66,7 +90,7 @@ void get_n_display_clk() {
       dma_display->setTextSize(2);
       dma_display->fillRect(1,1,62,12,myBLACK);
       dma_display->print(hour_str + ":" + min_str + ":" + sec_str);
-      Serial.println(hour_str + ":" + min_str + ":" + sec_str);
+      Serial_n_Webln(hour_str + ":" + min_str + ":" + sec_str);
       dma_display->setTextSize(1);
       dma_display->setCursor(55,7);
       dma_display->print(am_pm);         
@@ -74,7 +98,10 @@ void get_n_display_clk() {
   }
 }
 
-
+/*
+* Gets prayer schedule from IslamicFinder API
+* Displays schedule on the RGB matrix
+*/
 void get_n_display_times(HTTPClient &client, bool &get_prayer_times, int httpCode) {
   const char* fajr = nullptr;
   const char* sunrise = nullptr;
@@ -88,8 +115,8 @@ void get_n_display_times(HTTPClient &client, bool &get_prayer_times, int httpCod
   String payload = client.getString();
   payload.replace("%am%", "AM");
   payload.replace("%pm%", "PM");
-  Serial.println("\nStatuscode: " + String(httpCode));
-  Serial.println(payload);
+  Serial_n_Webln("\nStatuscode: " + String(httpCode));
+  Serial_n_Webln(payload);
 
   DynamicJsonDocument doc(1024);
   deserializeJson(doc,payload);
@@ -101,13 +128,13 @@ void get_n_display_times(HTTPClient &client, bool &get_prayer_times, int httpCod
   maghrib = doc["results"]["Maghrib"];
   isha = doc["results"]["Isha"];
 
-  Serial.println(fajr);
-  Serial.println(sunrise);
-  Serial.println(dhuhr);
-  Serial.println(asr);
-  Serial.println(maghrib);
-  Serial.println(isha);
-
+  Serial_n_Webln(fajr);
+  Serial_n_Webln(sunrise);
+  Serial_n_Webln(dhuhr);
+  Serial_n_Webln(asr);
+  Serial_n_Webln(maghrib);
+  Serial_n_Webln(isha);
+  
   client.end();
 
   dma_display->fillRect(38,17,23,5,myBLACK);
