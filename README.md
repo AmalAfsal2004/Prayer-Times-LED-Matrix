@@ -15,3 +15,8 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 
 <img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clock_gif.gif" allign = "right"/>
 </div>
+
+## Operations
+Please install the essential libraries in the PrayerTime.ino file. I will cover why I included the non-essential libraries later.
+
+### Clock
