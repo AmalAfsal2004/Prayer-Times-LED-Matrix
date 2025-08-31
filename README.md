@@ -11,7 +11,7 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 
 
 <div>
-<img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg?raw=true" allign ="left" hspace="10" />
+<img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg?raw=true" allign ="left" hspace="0" />
 
 <img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clock_gif.gif" allign = "right"/>
 </div>
