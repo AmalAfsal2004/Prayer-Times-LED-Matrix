@@ -30,5 +30,7 @@ By default, the time is in 24 hour format, so the function, get_n_display_clk(),
 This project utilizes the Islamic Finder API which I will leave a link for here:
 https://www.islamicfinder.us/index.php/api
 There are various paramaters that can be used for a get request, but I simply used country and zipcode as shown in PrayerTime.ino
-The function get_n_display_time() in functions.ino gets a JSON response from the API, and displays the prayer timesto the RGB matrix.
+The function get_n_display_time() in functions.ino gets a JSON response from the API, and displays the prayer times to the RGB matrix.
 
+### (Optional) ElegantOTA and WebSerial
+The non-essential libraries that I have used allow me to upload updates to the ESP32 over the air, and also looking at the serial monitor over the air. If you noticed a lack of Serial.print() commands, it is because they have been replaced by my Serial_n_Web() commands. These commands print to the Serial Monitor, and also the Web Serial Monitor.
