@@ -10,6 +10,10 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 - Jumper Cables, female to and female to male
 
 
-<div align = "center">
+<div align = "left">
 <img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg?raw=true" />
+</div>
+
+<div align = "right">
+<img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clock_gif.gif" />
 </div>
