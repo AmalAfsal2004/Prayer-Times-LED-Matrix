@@ -4,4 +4,7 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 ## Physical Components
 - ESP-WROOM-32 ESP32 ESP-32S Development Board 2.4GHz Dual-Mode WiFi + Bluetooth (Brand: AITRIP)
 - 64x64 HUB 75 RGB MATRIX
-- 2 5v Power Supplies to power Display and ESP32 (Will most likely switch to 1 5V Power Supply with more amps in the future)
+- Two 5v Power Supplies to power Display and ESP32 (Will most likely switch to one 5V Power Supply with more amps in the future)
+- Power Supply Breadboard (Connect one of the power supplies to this, which then powers the ESP32)
+- Breadboard (For the Power Supply Breadboard to connect to)
+- Jumper Cables, female to and female to male
