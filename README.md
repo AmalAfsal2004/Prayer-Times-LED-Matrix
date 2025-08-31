@@ -17,6 +17,11 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 </div>
 
 ## Operations
-Please install the essential libraries in the PrayerTime.ino file. I will cover why I included the non-essential libraries later.
+Please install the essential libraries in the PrayerTime.ino file. I will cover why I included the non-essential libraries later. For this project to work, you will need access to a WiFi network, as the program utilizes an NTP Server, and the Islamic 
+Finder API.
 
 ### Clock
+Instead of using an RTC module, this project utilzes an NTP Server to display the time. At the top of PrayerTime.ino, you will see information about the clock such as server link, gmtOffset in seconds, and daylight offset in seconds (daylight savings). You must change this depending on your time zone. For example, Arizona has an offset of -7 hours, so the GMT offset in seconds is
+-25200. 
+
+By default, the time is in 24 hour format, so the function, get_n_display_clk(), in functions.ino converts it back to 12 hour time and displays it on the RGB Matrix.
