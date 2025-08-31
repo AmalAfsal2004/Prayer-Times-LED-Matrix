@@ -25,3 +25,10 @@ Instead of using an RTC module, this project utilzes an NTP Server to display th
 -25200. 
 
 By default, the time is in 24 hour format, so the function, get_n_display_clk(), in functions.ino converts it back to 12 hour time and displays it on the RGB Matrix.
+
+### Prayer Times
+This project utilizes the Islamic Finder API which I will leave a link for here:
+https://www.islamicfinder.us/index.php/api
+There are various paramaters that can be used for a get request, but I simply used country and zipcode as shown in PrayerTime.ino
+The function get_n_display_time() in functions.ino gets a JSON response from the API, and displays the prayer timesto the RGB matrix.
+
