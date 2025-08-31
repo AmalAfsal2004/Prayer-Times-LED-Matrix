@@ -11,7 +11,7 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 
 
 <div>
-<img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg?raw=true" allign ="left" hspace="0" />
+<img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg" allign ="left" hspace="0" />
 
 <img src = "https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clock_gif.gif" allign = "right"/>
 </div>
@@ -28,8 +28,8 @@ By default, the time is in 24 hour format, so the function, get_n_display_clk(),
 
 ### Prayer Times
 This project utilizes the Islamic Finder API which I will leave a link for here:
-https://www.islamicfinder.us/index.php/api
-There are various paramaters that can be used for a get request, but I simply used country and zipcode as shown in PrayerTime.ino
+https://www.islamicfinder.us/index.php/api .
+There are various paramaters that can be used for a get request, but I simply used country and zipcode as shown in PrayerTime.ino .
 The function get_n_display_time() in functions.ino gets a JSON response from the API, and displays the prayer times to the RGB matrix.
 
 ### (Optional) ElegantOTA and WebSerial
