@@ -1,4 +1,4 @@
-//LIBRARIES FOR OVER THE AIR UPDATES
+//NON-ESSENTIAL, LIBRARIES FOR OVER THE AIR UPDATES
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
