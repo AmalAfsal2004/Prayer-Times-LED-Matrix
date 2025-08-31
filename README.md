@@ -9,4 +9,4 @@ Muslims have to peform five prayers each day, with the times of these prayers be
 - Breadboard (For the Power Supply Breadboard to connect to)
 - Jumper Cables, female to and female to male
 
-
+![alt text](https://github.com/AmalAfsal2004/Prayer-Times-LED-Matrix/blob/main/images/prayer_clk1.jpeg?raw=true "Prayer Time Display, 64x64 RGB Matrix")
