@@ -1,4 +1,4 @@
-//NON-ESSENTIAL, LIBRARIES FOR OVER THE AIR UPDATES
+//LIBRARIES FOR OVER THE AIR UPDATES
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -81,6 +81,7 @@ bool get_prayer_times = false;
 */
 unsigned long prev_clock_millis = 0;
 unsigned long prev_display_millis = 0;
+unsigned long prev_runtime_millis = 0;
 
 //For OTA serial monitor and sketch pushing
 AsyncWebServer server(80); 
@@ -143,6 +144,7 @@ void setup() {
     }
     else {
       Serial_n_Webln("Error on initial fetch prayer times HTTP Request");
+      Serial_n_Webln(httpCode);
     }
   }
   else {
@@ -163,9 +165,12 @@ void setup() {
     }
     WebSerial.println(d);
   });
+  WebSerial.setAuthentication(OTA_USR , OTA_PASS);
 
   ElegantOTA.begin(&server);   
   ElegantOTA.setAutoReboot(true);
+  ElegantOTA.setAuth(OTA_USR , OTA_PASS);
+
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
   });
@@ -183,6 +188,8 @@ void loop() {
   const int interval_clock = 1000;
   //Refresh the Prayer Times every 2 hours
   const int interval_display = 7200000;
+  //Interval for run_time hours
+  const int interval_runtime = 10000;
 
   //Display Clock
   if ((millis() - prev_clock_millis) >= interval_clock) {
@@ -211,4 +218,17 @@ void loop() {
       Serial_n_Webln("Connection Lost");
     }
   }
+
+  //Uptime and Resource Usage to Serial monitors
+  if ((millis() - prev_runtime_millis) >= interval_runtime) {
+    prev_runtime_millis = millis();
+
+    UBaseType_t stackLeft = uxTaskGetStackHighWaterMark(NULL);
+    double run_time = millis() * (0.001 / 3600); //Uptime in hours
+
+    Serial_n_Webln("Runtime in hours: " + String(run_time));
+    Serial_n_Webln("Free Heap: " + String(ESP.getFreeHeap()));
+    Serial_n_Webln("Remaining Stack: " + String(stackLeft));
+  }
+
 }

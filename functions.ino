@@ -90,7 +90,6 @@ void get_n_display_clk() {
       dma_display->setTextSize(2);
       dma_display->fillRect(1,1,62,12,myBLACK);
       dma_display->print(hour_str + ":" + min_str + ":" + sec_str);
-      Serial_n_Webln(hour_str + ":" + min_str + ":" + sec_str);
       dma_display->setTextSize(1);
       dma_display->setCursor(55,7);
       dma_display->print(am_pm);         
@@ -137,32 +136,29 @@ void get_n_display_times(HTTPClient &client, bool &get_prayer_times, int httpCod
   
   client.end();
 
-  dma_display->fillRect(38,17,23,5,myBLACK);
-  dma_display->fillRect(38,27,23,5,myBLACK);
-  dma_display->fillRect(38,37,23,5,myBLACK);
-  dma_display->fillRect(38,47,23,5,myBLACK);
-  dma_display->fillRect(38,57,23,5,myBLACK);
+  dma_display->clearScreen();
+  static_background();
 
   dma_display->setTextWrap(false);
   dma_display->setCursor(38,21);
   dma_display->setTextColor(myWHITE);
-  dma_display->print(fajr);
+  dma_display->print(String(fajr));
 
   dma_display->setCursor(38,31);
   dma_display->setTextColor(myWHITE);
-  dma_display->print(dhuhr);
+  dma_display->print(String(dhuhr));
 
   dma_display->setCursor(38,41);
   dma_display->setTextColor(myWHITE);
-  dma_display->print(asr);
+  dma_display->print(String(asr));
 
   dma_display->setCursor(38,51);
   dma_display->setTextColor(myWHITE);
-  dma_display->print(maghrib);
+  dma_display->print(String(maghrib));
 
   dma_display->setCursor(38,61);
   dma_display->setTextColor(myWHITE);
-  dma_display->print(isha);
+  dma_display->print(String(isha))  ;
 
   get_prayer_times = false; 
 }
