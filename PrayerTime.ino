@@ -77,7 +77,7 @@ uint16_t myORANGE = dma_display->color565(255, 154, 0);
 bool get_prayer_times = false;
 
 /*
-* two longs used for millis() delaying
+* three longs used for millis() delaying
 */
 unsigned long prev_clock_millis = 0;
 unsigned long prev_display_millis = 0;

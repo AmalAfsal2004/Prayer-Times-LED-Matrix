@@ -1,11 +1,3 @@
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "time.h"
-#include <local_info.h> //Local file that holds Internet information, plus Location and Country for API query
-#include <Fonts/TomThumb.h>
-
 
 /*
 * println() for both online and real life Serial Monitor
